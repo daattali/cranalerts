@@ -1,10 +1,35 @@
 base_url <- "https://cranalerts.com"
 
+# Create an email input from the parameters of a text input
+emailInput <- function(...) {
+  tag <- textInput(...)
+  tag$children[[2]]$attribs$type <- "email"
+  tag
+}
+
 fluidPage(
   title = "CRANalerts - Get email alerts when a CRAN package gets updated",
   shinyjs::useShinyjs(),
-  tags$link(rel="stylesheet", href="cranalerts.css"),
-  tags$link(rel="stylesheet", href="https://fonts.googleapis.com/css?family=Open+Sans"),
+  tags$head(
+    tags$link(rel="stylesheet", href="cranalerts.css"),
+    tags$link(rel="stylesheet", href="https://fonts.googleapis.com/css?family=Open+Sans"),
+    tags$link(rel = "shortcut icon", type="image/png", href="favicon.png"),
+    
+    # Facebook OpenGraph tags
+    tags$meta(property = "og:title", content = "CRANalerts"),
+    tags$meta(property = "og:type", content = "website"),
+    tags$meta(property = "og:url", content = "https://cranalerts.com/"),
+    tags$meta(property = "og:image", content = "https://cranalerts.com/screenshot.PNG"),
+    tags$meta(property = "og:description", content = "Get email alerts when a CRAN package gets updated"),
+    
+    # Twitter summary cards
+    tags$meta(name = "twitter:card", content = "summary"),
+    tags$meta(name = "twitter:site", content = "@daattali"),
+    tags$meta(name = "twitter:creator", content = "@daattali"),
+    tags$meta(name = "twitter:title", content = "CRANalerts"),
+    tags$meta(name = "twitter:description", content = "Get email alerts when a CRAN package gets updated"),
+    tags$meta(name = "twitter:image", content = "https://cranalerts.com/screenshot.PNG")
+  ),
   class = "full_content_area",
   
   div(tags$a(href = base_url, id = "page_title", "CRANalerts")),
@@ -18,7 +43,8 @@ fluidPage(
       div(
         id = "page_main",
         textInput("package_name", NULL, "", placeholder = "R package"), br(),
-        textInput("user_email", NULL, "", placeholder = "Your email"), br(),
+        
+        emailInput("user_email", NULL, "", placeholder = "Your email"), br(),
         actionButton("confirm_submit_btn", "SUBSCRIBE TO UPDATES"),
         tags$em(textOutput("main_error"))
       ),
