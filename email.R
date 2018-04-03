@@ -111,7 +111,7 @@ send_email_template <- function(type, email = NULL, package = NULL, token = NULL
         "to subscribe",
         "to updates to the", package, "R package.", br(), br(),
         "According to our records",
-        "you're already subscribed to", package, ", so just sit sight -- you're all set already!"
+        "you're already subscribed to", package, ", so just sit tight -- you're all set!"
       )
     )
     body <- tagList(body, email_footer(email, package))

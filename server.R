@@ -25,9 +25,14 @@ function(input, output, session) {
   observeEvent(input$confirm_submit_btn, {
     main_error_msg(NULL)
 
-    package <- input$package_name
+    package <- trimws(input$package_name)
     if (!package %in% package_info$Package) {
-      main_error_msg("Please enter a package that is currently on CRAN")
+      if (tolower(package) %in% tolower(package_info$Package)) {
+        suggestion <- package_info$Package[which(tolower(package) == tolower(package_info$Package))[1]]
+        main_error_msg(paste0("Please enter a package that is currently on CRAN (did you mean ", suggestion, "?)"))
+      } else {
+        main_error_msg("Please enter a package that is currently on CRAN")
+      }
       return()
     }
     
@@ -89,9 +94,9 @@ function(input, output, session) {
   # Confirmation page ----
   
   confirm_msg <- reactiveVal()
-  output$confirm_msg <- renderText({
+  output$confirm_msg <- renderUI({
     shinyjs::hide("loader_img_main")
-    confirm_msg()
+    HTML(confirm_msg())
   })
   
   observeEvent(page_type(), {
@@ -125,7 +130,7 @@ function(input, output, session) {
       res <- make_pooled_query("SELECT alert_id FROM Alerts WHERE email=? AND package=?", list(email, package))
       already_subscribed <- (nrow(res) > 0)
       if (already_subscribed) {
-        confirm_msg(paste0("According to our records you're already subscribed to ", package, ", so just sit sight -- you're all set already!"))
+        confirm_msg(paste0("According to our records you're already subscribed to ", tags$strong(package), ", so just sit tight -- you're all set!"))
         return()
       }
     }
@@ -139,7 +144,7 @@ function(input, output, session) {
     # add this subscription to the Alerts table
     make_pooled_query("INSERT INTO Alerts (email, package, timestamp) VALUES (?, ?, strftime('%Y%m%d%H%M%S', 'now'))", list(email, package))
     
-    confirm_msg(paste0("You're now subscribed to ", package, " and will get an email when the package gets updated on CRAN."))
+    confirm_msg(paste0("You're now subscribed to ", tags$strong(package), ". You'll get an email whenever the package gets updated on CRAN."))
     
     # send a confirmation email
     send_email_template("confirmed", email = email, package = package)
@@ -149,9 +154,9 @@ function(input, output, session) {
   # Unsubscribe page ----
   
   unsub_msg <- reactiveVal()
-  output$unsub_msg <- renderText({
+  output$unsub_msg <- renderUI({
     shinyjs::hide("loader_img_main")
-    unsub_msg()
+    HTML(unsub_msg())
   })
   
   observeEvent(page_type(), {
@@ -183,7 +188,7 @@ function(input, output, session) {
       send_email_template("unsub_all", email = email)
     } else {
       make_pooled_query("DELETE FROM Alerts WHERE email=? AND package=?", list(email, pkg))
-      unsub_msg(paste0("You have been unsubscribed from updates to ", pkg))
+      unsub_msg(paste0("You have been unsubscribed from updates to ", tags$strong(pkg)))
       send_email_template("unsub_package", email = email, package = pkg)
     }
   })

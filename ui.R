@@ -28,7 +28,11 @@ fluidPage(
     tags$meta(name = "twitter:creator", content = "@daattali"),
     tags$meta(name = "twitter:title", content = "CRANalerts"),
     tags$meta(name = "twitter:description", content = "Get email alerts when a CRAN package gets updated"),
-    tags$meta(name = "twitter:image", content = "https://cranalerts.com/screenshot.PNG")
+    tags$meta(name = "twitter:image", content = "https://cranalerts.com/screenshot.PNG"),
+    
+    tags$meta(name="theme-color", content="#4476b3"),
+    tags$meta(name="msapplication-navbutton-color", content="#4476b3"),
+    tags$meta(name="apple-mobile-web-app-status-bar-style", content="#4476b3")
   ),
   class = "full_content_area",
   
@@ -56,12 +60,12 @@ fluidPage(
       ),
       div(
         id = "page_confirm",
-        div(class="section_title", textOutput("confirm_msg")), br(), br(),
+        div(class="section_title", uiOutput("confirm_msg")), br(), br(),
         tags$a(href = base_url, "Subscribe to another package")
       ),
       div(
         id = "page_unsub",
-        div(class="section_title", textOutput("unsub_msg")), br(), br(),
+        div(class="section_title", uiOutput("unsub_msg")), br(), br(),
         tags$a(href = base_url, "Subscribe to a package")
       )
     )
