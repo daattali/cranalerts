@@ -47,7 +47,6 @@ fluidPage(
       div(
         id = "page_main",
         textInput("package_name", NULL, "", placeholder = "R package"), br(),
-        
         emailInput("user_email", NULL, "", placeholder = "Your email"), br(),
         actionButton("confirm_submit_btn", "SUBSCRIBE TO UPDATES"),
         tags$em(textOutput("main_error"))
@@ -55,6 +54,7 @@ fluidPage(
       div(
         id = "page_main_response",
         div(class="section_title", "Check your email inbox to confirm your subscription"), br(),
+        tags$strong(textOutput("main_response_email")), br(),
         tags$strong("Don't forget to check your spam folder!"), br(), br(),
         actionLink("submit_another_btn", "Subscribe to another package")
       ),
@@ -70,5 +70,10 @@ fluidPage(
       )
     )
   ),
-  div(id = "footer", "A project by", tags$a(href = "http://attalitech.com", "AttaliTech Ltd"))
+  div(
+    id = "footer",
+    "A project by", tags$a(href = "http://attalitech.com", "AttaliTech Ltd"),
+    HTML("&bull;"),
+    tags$a(href = "https://www.paypal.me/daattali/10", "Support us")
+  )
 )

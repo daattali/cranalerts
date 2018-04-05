@@ -13,13 +13,26 @@ function(input, output, session) {
     shinyjs::hide("loader_img_main")
     shinyjs::show(id = paste0("page_", page))
     page_type(page)
+    
+    # Focus on the first input so the user can type right away
+    shinyjs::runjs("$($('#main_content_area').find('input:visible')[0]).focus().click();")
   })
   
   # --------------
   # Main page ----
-  
+
   main_error_msg <- reactiveVal()
   output$main_error <- renderText(main_error_msg())
+  output$main_response_email <- renderText(trimws(input$user_email))
+  
+  # Submit the form when Enter is pressed within one of the two inputs
+  input_click_enter <- function(event) {
+    if (!is.null(event$keyCode) && event$keyCode == 13) {
+      shinyjs::click("confirm_submit_btn")
+    }
+  }
+  shinyjs::onevent("keydown", "package_name", input_click_enter)
+  shinyjs::onevent("keydown", "package_name", input_click_enter)
   
   # Submitting a new email-package alert request
   observeEvent(input$confirm_submit_btn, {
@@ -88,6 +101,7 @@ function(input, output, session) {
     shinyjs::show("page_main")
     shinyjs::hide("loader_img_main")
     shinyjs::enable("confirm_submit_btn")
+    shinyjs::runjs("$($('#main_content_area').find('input:visible')[0]).focus().click();")
   })
   
   # ----------------------
