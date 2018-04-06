@@ -74,6 +74,7 @@ fluidPage(
     id = "footer",
     "A project by", tags$a(href = "http://attalitech.com", "AttaliTech Ltd"),
     HTML("&bull;"),
-    tags$a(href = "https://www.paypal.me/daattali/10", "Support us")
+    tags$a(href = "https://www.paypal.me/daattali/10", "Support us"), br(),
+    span("Built entirely in R/Shiny", style = "display: inline-block;margin-top: 2px; font-size:14px;")
   )
 )
