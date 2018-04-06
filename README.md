@@ -10,9 +10,9 @@ Technical setup details:
     sqlite3 cranalerts.sqlite3 < init_cranalerts_db.sql
     ```
     
-    Make sure to make the database file read/write to the owner and group
+    Make sure to make the database file readable/writeable to the owner and group
 
-2. Install `rJava` package (for email sending using `mailr`) and configure it. Create `/etc/ld.so.conf.d/java.conf` file with the following content:
+2. Install `rJava` package (for email sending using `mailr`) and configure it. I was having a lot of trouble getting it to work, from what I remember this is the StackOverflow advice that actually helped: Create `/etc/ld.so.conf.d/java.conf` file with the following content:
 
     ```
     /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64
