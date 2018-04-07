@@ -4,6 +4,8 @@ base_url <- "https://cranalerts.com"
 emailInput <- function(...) {
   tag <- textInput(...)
   tag$children[[2]]$attribs$type <- "email"
+  # Prevent LastPass from inserting its icon into the input
+  tag$children[[2]] <- tagAppendAttributes(tag$children[[2]], "data-lpignore" = "true")
   tag
 }
 
