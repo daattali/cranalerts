@@ -17,19 +17,21 @@ fluidPage(
     tags$link(rel="stylesheet", href="https://fonts.googleapis.com/css?family=Open+Sans"),
     tags$link(rel = "shortcut icon", type="image/png", href="favicon.png"),
     
+    tags$meta(name = "description", content = "Get a notification straight to your email inbox when an R package on CRAN gets updated. A project by AttaliTech."),
+
     # Facebook OpenGraph tags
     tags$meta(property = "og:title", content = "CRANalerts"),
     tags$meta(property = "og:type", content = "website"),
     tags$meta(property = "og:url", content = "https://cranalerts.com/"),
     tags$meta(property = "og:image", content = "https://cranalerts.com/screenshot.PNG"),
-    tags$meta(property = "og:description", content = "Get email alerts when a CRAN package gets updated"),
-    
+    tags$meta(property = "og:description", content = "Get email alerts when a CRAN package gets updated."),
+
     # Twitter summary cards
     tags$meta(name = "twitter:card", content = "summary"),
     tags$meta(name = "twitter:site", content = "@daattali"),
     tags$meta(name = "twitter:creator", content = "@daattali"),
     tags$meta(name = "twitter:title", content = "CRANalerts"),
-    tags$meta(name = "twitter:description", content = "Get email alerts when a CRAN package gets updated"),
+    tags$meta(name = "twitter:description", content = "Get email alerts when a CRAN package gets updated."),
     tags$meta(name = "twitter:image", content = "https://cranalerts.com/screenshot.PNG"),
     
     tags$meta(name="theme-color", content="#4476b3"),
