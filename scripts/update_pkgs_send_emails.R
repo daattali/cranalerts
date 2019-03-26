@@ -13,7 +13,7 @@ alerts_table <- DBI::dbReadTable(con, "Alerts")
 old_package_info <- DBI::dbReadTable(con, "PackageInfo")
 
 # Update the package versions table ----
-new_info <- as.data.frame(available.packages())
+new_info <- as.data.frame(available.packages(filters = "duplicates"))
 new_info <- new_info[, c("Package", "Version")]
 rownames(new_info) <- NULL
 new_info$Package <- as.character(new_info$Package)
