@@ -1,6 +1,7 @@
 base_url <- "https://cranalerts.com"
 body_text_css <- "font-size: 16px;"
 button_css <- "background: #6ebb43; color: white; text-align: center; display: inline-block; padding: 10px 50px; text-decoration: none; font-weight: bold; font-size: 20px;"
+AUTHOR_EMAIL <- "daattali@gmail.com"
 
 # Is an email address valid?
 is_valid_email <- function(x) {
@@ -100,8 +101,11 @@ email_footer <- function(email, package = NULL, unsub_token = NULL) {
 }
 
 # Send a pre-defined type of email
-send_email_template <- function(type, email = NULL, package = NULL, token = NULL, new_version = NULL) {
-  if (type == "already_subscribed") {
+send_email_template <- function(type, email = NULL, package = NULL, token = NULL, new_version = NULL, subject = "", body = tags$div()) {
+  if (type == "generic") {
+    # Do nothing; generic emails should have the subject and body set in the function call
+    body <- tags$div(body)
+  } else if (type == "already_subscribed") {
     subject <- paste0("CRANalerts: Already subscribed to ", package)
     body <- tags$div(
       style = body_text_css,
@@ -189,6 +193,21 @@ send_email_template <- function(type, email = NULL, package = NULL, token = NULL
       )
     )
     body <- tagList(body, email_footer(email, package, unsub_token = token))
+  } else if (type == "20190626bug") {
+    subject <- "Please ignore all CRANalerts emails from today"
+    body <- tags$div(
+      style = body_text_css,
+      tags$p(
+        "We're really sorry for the accidental spam!"
+      ),
+      tags$p(
+        "Earlier today, you may have received emails notifying you that many R packages have been deleted from CRAN. This was not true and you do not have anything to worry about--all your R packages are still on CRAN."
+      ),
+      tags$p(
+        "We realize this may have caused you some distress, and we apologize for that. CRANalerts has been running for over a year without any issues until now, and the bug that caused this mistake has now been fixed. We hope you'll continue to enjoy this free service."
+      )
+    )
+    body <- tagList(body, email_footer(email, unsub_token = token))
   } else {
     message("Unknown email type: ", type)
     stop("Unknown email type: ", type)

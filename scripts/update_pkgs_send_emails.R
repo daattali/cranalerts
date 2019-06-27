@@ -7,13 +7,26 @@ source("email.R", local = TRUE)
 
 con <- get_database(type = "single")
 
+# Get a current list of CRAN packages ---
+mirrors <- c("https://cloud.r-project.org", "https://cran.rstudio.com")
+new_info <- NULL
+for (mirror in mirrors) {
+  mirror_contrib <- contrib.url(mirror)
+  new_info <- as.data.frame(available.packages(contriburl = mirror_contrib, filters = "duplicates"))
+  if (nrow(new_info) > 0) break
+  message("Mirror ", mirror, " is down")
+}
+if (is.null(new_info) || nrow(new_info) == 0) {
+  send_email_template("generic", email = AUTHOR_EMAIL, subject = "CRANalerts mirrors down", body = "")
+  stop("No working mirror found")
+}
+
 # Read old info ----
 users_table <- DBI::dbReadTable(con, "Users")
 alerts_table <- DBI::dbReadTable(con, "Alerts")
 old_package_info <- DBI::dbReadTable(con, "PackageInfo")
 
 # Update the package versions table ----
-new_info <- as.data.frame(available.packages(filters = "duplicates"))
 new_info <- new_info[, c("Package", "Version")]
 rownames(new_info) <- NULL
 new_info$Package <- as.character(new_info$Package)
