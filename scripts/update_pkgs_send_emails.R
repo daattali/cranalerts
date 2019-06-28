@@ -17,7 +17,7 @@ for (mirror in mirrors) {
   message("Mirror ", mirror, " is down")
 }
 if (is.null(new_info) || nrow(new_info) == 0) {
-  send_email_template("generic", email = AUTHOR_EMAIL, subject = "CRANalerts mirrors down", body = "")
+  Email$new(email = AUTHOR_EMAIL, subject = "CRANalerts mirrors down", body = "")$send()
   stop("No working mirror found")
 }
 
@@ -56,7 +56,7 @@ if (nrow(updated_pkgs) > 0) {
         message("User alerted: ", email)
         unsub_token <- users_table[users_table$email == email, 'unsub_token']
         if (length(unsub_token) == 0) return()
-        send_email_template("alert_updated", email = email, package = pkg, token = unsub_token, new_version = new_version)
+        EmailAlertUpdated$new(email = email, package = pkg, token = unsub_token, new_version = new_version)$send()
       })
     }
   })
@@ -77,7 +77,7 @@ if (length(pkgs_removed) > 0) {
         message("User alerted: ", email)
         unsub_token <- users_table[users_table$email == email, 'unsub_token']
         if (length(unsub_token) == 0) return()
-        send_email_template("alert_removed", email = email, package = pkg, token = unsub_token)
+        EmailAlertRemoved$new(email = email, package = pkg, token = unsub_token)$send()
       })
     }
   })

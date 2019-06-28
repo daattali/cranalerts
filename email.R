@@ -1,3 +1,5 @@
+library(htmltools)
+
 base_url <- "https://cranalerts.com"
 body_text_css <- "font-size: 16px;"
 button_css <- "background: #6ebb43; color: white; text-align: center; display: inline-block; padding: 10px 50px; text-decoration: none; font-weight: bold; font-size: 20px;"
@@ -25,40 +27,15 @@ build_url <- function(params = list()) {
   )
 }
 
-# Send an email. Return TRUE if successful, FALSE if an error occurred
-config <- config::get(file = "config.yml")
-send_email <- function(to, subject, body) {
-  result <- try(
-    mailR::send.mail(
-      from = config$Smtp.From,
-      to = to,
-      replyTo = config$Smtp.ReplyTo,
-      subject = subject,
-      body = as.character(body),
-      html = TRUE,
-      smtp = list(host.name = config$Smtp.Server,
-                  port = config$Smtp.Port, 
-                  user.name = config$Smtp.Username, 
-                  passwd = config$Smtp.Password, 
-                  ssl = TRUE),
-      authenticate = TRUE,
-      send = TRUE
-    ),
-    silent = TRUE
-  )
-  success <- (class(result) != "try-error" && !is.null(result))
-  if (!success) {
-    message("Failed to send '", subject, "' email to ", to)
-  }
-  
-  success
-}
-
 # Generate the email footer. If the email exists as a registered user, add unsub links.
 # If a package is provided, add a link to unsub from that package only. If an unsub_token
 # is provided, then we can skip the database lookup.
 email_footer <- function(email, package = NULL, unsub_token = NULL) {
   if (is.null(unsub_token)) {
+    # TODO this isn't great, con is assumed to be a global variable that just exists
+    if (!exists("con") || !is(con, "Pool")) {
+      return()
+    }
     res <- make_pooled_query("SELECT unsub_token FROM Users WHERE email=?", list(email))
     if (nrow(res) > 0) {
       unsub_token <- res$unsub_token[1]
@@ -100,118 +77,216 @@ email_footer <- function(email, package = NULL, unsub_token = NULL) {
   )
 }
 
-# Send a pre-defined type of email
-send_email_template <- function(type, email = NULL, package = NULL, token = NULL, new_version = NULL, subject = "", body = tags$div()) {
-  if (type == "generic") {
-    # Do nothing; generic emails should have the subject and body set in the function call
-    body <- tags$div(body)
-  } else if (type == "already_subscribed") {
-    subject <- paste0("CRANalerts: Already subscribed to ", package)
-    body <- tags$div(
-      style = body_text_css,
-      tags$p(
-        "You've recently submitted a request on",
-        tags$a(href=base_url, "CRANalerts"),
-        "to subscribe",
-        "to updates to the", package, "R package.", br(), br(),
-        "According to our records",
-        "you're already subscribed to", package, ", so just sit tight -- you're all set!"
+config <- config::get(file = "config.yml")
+
+Email <- R6::R6Class(
+  "Email",
+  public = list(
+    initialize = function(email, subject, body,
+                          include_footer = FALSE, package = NULL, token = NULL) {
+      private$email <- email
+      private$subject <- subject
+      private$body <- body
+      private$include_footer <- include_footer
+      private$package <- package
+      private$token <- token
+    },
+
+    # Send an email. Return TRUE if successful, FALSE if an error occurred
+    send = function() {
+      body <- private$body
+      if (is.character(body) && length(body) == 1 && body == "") {
+        body <- "<div></div>"
+      }
+      if (private$include_footer) {
+        body <- tagList(body, email_footer(private$email, private$package, private$token))
+      }
+
+      result <- try(
+        mailR::send.mail(
+          from = config$Smtp.From,
+          to = private$email,
+          replyTo = config$Smtp.ReplyTo,
+          subject = private$subject,
+          body = as.character(body),
+          html = TRUE,
+          smtp = list(host.name = config$Smtp.Server,
+                      port = config$Smtp.Port,
+                      user.name = config$Smtp.Username,
+                      passwd = config$Smtp.Password,
+                      ssl = TRUE),
+          authenticate = TRUE,
+          send = TRUE
+        ),
+        silent = TRUE
       )
-    )
-    body <- tagList(body, email_footer(email, package))
-  } else if (type == "confirm_subscription") {
-    subject <- paste("CRANalerts: Confirm subscription to", package)
-    body <- tags$div(
-      style = body_text_css,
-      tags$p(
-        "You've recently submitted a request on",
-        tags$a(href=base_url, "CRANalerts"),
-        "to subscribe",
-        "to updates to the", package, "R package.", br(), br(),
-        "Click the following link to confirm your subscription:"
-      ),
-      tags$a(
-        href = build_url(c("action"="confirm", "token"=token)),
-        "Confirm",
-        style = button_css
-      ),
-      tags$p(
-        "We will only send you email updates if you click the above link. If you did not submit this request, you can safely ignore this email."
-      )
-    )
-    body <- tagList(body, email_footer(email, package))
-  } else if (type == "confirmed") {
-    subject <- paste0("CRANalerts: Subscription to ", package, " confirmed")
-    body <- tags$div(
-      style = body_text_css,
-      tags$p(
-        "You are now subscribed to the", package, "R package. We'll email you every time it gets updated on CRAN."
-      )
-    )
-    body <- tagList(body, email_footer(email, package))
-  } else if (type == "unsub_all") {
-    subject <- paste0("CRANalerts: Unsubscribed from all emails")
-    body <- tags$div(
-      style = body_text_css,
-      tags$p(
-        "Thank you for using",
-        tags$a(href=base_url, "CRANalerts"), br(), br(),
-        "You are now unsubscribed from all emails."
-      )
-    )
-  } else if (type == "unsub_package") {
-    subject <- paste0("CRANalerts: Unsubscribed from ", package)
-    body <- tags$div(
-      style = body_text_css,
-      tags$p(
-        "Thank you for using",
-        tags$a(href=base_url, "CRANalerts"), br(), br(),
-        "You are now unsubscribed from updates to the", package, "R package."
-      )
-    )
-  } else if (type == "alert_updated") {
-    subject <- paste0("CRANalerts: ", package, " has been updated on CRAN!")
-    body <- tags$div(
-      style = body_text_css,
-      tags$p(
-        "Good news!", br(), br(),
-        "The R package", package, " has been updated to version", new_version, "on CRAN.", br(), br(),
-        tags$a(
-          href = paste0("https://CRAN.R-project.org/package=", package),
-          "See updated package",
-          style = button_css
+      success <- (class(result) != "try-error" && !is.null(result))
+      if (!success) {
+        message("Failed to send '", private$subject, "' email to ", private$email)
+      }
+
+      success
+    }
+  ),
+  private = list(
+    email = NULL,
+    subject = NULL,
+    body = NULL,    # body cannot be an empty string
+    include_footer = NULL,
+    package = NULL,
+    token = NULL
+  )
+)
+
+EmailAlreadySubscribed <- R6::R6Class(
+  "EmailAlreadySubscribed",
+  inherit = Email,
+  public = list(
+    initialize = function(email, package) {
+      subject <- paste0("CRANalerts: Already subscribed to ", package)
+      body <- tags$div(
+        style = body_text_css,
+        tags$p(
+          "You've recently submitted a request on",
+          tags$a(href=base_url, "CRANalerts"),
+          "to subscribe",
+          "to updates to the", package, "R package.", br(), br(),
+          "According to our records",
+          "you're already subscribed to", package, ", so just sit tight -- you're all set!"
         )
       )
-    )
-    body <- tagList(body, email_footer(email, package, unsub_token = token))
-  } else if (type == "alert_removed") {
-    subject <- paste0("CRANalerts: ", package, " has been removed from CRAN")
-    body <- tags$div(
-      style = body_text_css,
-      tags$p(
-        "It looks like the R package", package, " has been removed from CRAN."
+
+      super$initialize(email, subject, body, include_footer = TRUE, package = package)
+    }
+  )
+)
+
+EmailConfirmSubscription <- R6::R6Class(
+  "EmailConfirmSubscription",
+  inherit = Email,
+  public = list(
+    initialize = function(email, package, token) {
+      subject <- paste("CRANalerts: Confirm subscription to", package)
+      body <- tags$div(
+        style = body_text_css,
+        tags$p(
+          "You've recently submitted a request on",
+          tags$a(href=base_url, "CRANalerts"),
+          "to subscribe",
+          "to updates to the", package, "R package.", br(), br(),
+          "Click the following link to confirm your subscription:"
+        ),
+        tags$a(
+          href = build_url(c("action"="confirm", "token"=token)),
+          "Confirm",
+          style = button_css
+        ),
+        tags$p(
+          "We will only send you email updates if you click the above link. If you did not submit this request, you can safely ignore this email."
+        )
       )
-    )
-    body <- tagList(body, email_footer(email, package, unsub_token = token))
-  } else if (type == "20190626bug") {
-    subject <- "Please ignore all CRANalerts emails from today"
-    body <- tags$div(
-      style = body_text_css,
-      tags$p(
-        "We're really sorry for the accidental spam!"
-      ),
-      tags$p(
-        "Earlier today, you may have received emails notifying you that many R packages have been deleted from CRAN. This was not true and you do not have anything to worry about--all your R packages are still on CRAN."
-      ),
-      tags$p(
-        "We realize this may have caused you some distress, and we apologize for that. CRANalerts has been running for over a year without any issues until now, and the bug that caused this mistake has now been fixed. We hope you'll continue to enjoy this free service."
+
+      super$initialize(email, subject, body, include_footer = TRUE, package = package)
+    }
+  )
+)
+
+EmailConfirmed <- R6::R6Class(
+  "EmailConfirmed",
+  inherit = Email,
+  public = list(
+    initialize = function(email, package) {
+      subject <- paste0("CRANalerts: Subscription to ", package, " confirmed")
+      body <- tags$div(
+        style = body_text_css,
+        tags$p(
+          "You are now subscribed to the", package, "R package. We'll email you every time it gets updated on CRAN."
+        )
       )
-    )
-    body <- tagList(body, email_footer(email, unsub_token = token))
-  } else {
-    message("Unknown email type: ", type)
-    stop("Unknown email type: ", type)
-  }
-  
-  send_email(email, subject, body)
-}
+
+      super$initialize(email, subject, body, include_footer = TRUE, package = package)
+    }
+  )
+)
+
+EmailUnsubAll <- R6::R6Class(
+  "EmailUnsubAll",
+  inherit = Email,
+  public = list(
+    initialize = function(email) {
+      subject <- paste0("CRANalerts: Unsubscribed from all emails")
+      body <- tags$div(
+        style = body_text_css,
+        tags$p(
+          "Thank you for using",
+          tags$a(href=base_url, "CRANalerts"), br(), br(),
+          "You are now unsubscribed from all emails."
+        )
+      )
+
+      super$initialize(email, subject, body, include_footer = FALSE)
+    }
+  )
+)
+
+EmailUnsubPackage <- R6::R6Class(
+  "EmailUnsubPackage",
+  inherit = Email,
+  public = list(
+    initialize = function(email, package) {
+      subject <- paste0("CRANalerts: Unsubscribed from ", package)
+      body <- tags$div(
+        style = body_text_css,
+        tags$p(
+          "Thank you for using",
+          tags$a(href=base_url, "CRANalerts"), br(), br(),
+          "You are now unsubscribed from updates to the", package, "R package."
+        )
+      )
+
+      super$initialize(email, subject, body, include_footer = FALSE)
+    }
+  )
+)
+
+EmailAlertUpdated <- R6::R6Class(
+  "EmailAlertUpdated",
+  inherit = Email,
+  public = list(
+    initialize = function(email, package, token, new_version) {
+      subject <- paste0("CRANalerts: ", package, " has been updated on CRAN!")
+      body <- tags$div(
+        style = body_text_css,
+        tags$p(
+          "Good news!", br(), br(),
+          "The R package", package, " has been updated to version", new_version, "on CRAN.", br(), br(),
+          tags$a(
+            href = paste0("https://CRAN.R-project.org/package=", package),
+            "See updated package",
+            style = button_css
+          )
+        )
+      )
+
+      super$initialize(email, subject, body, include_footer = TRUE, package = package, token = token)
+    }
+  )
+)
+
+EmailAlertRemoved <- R6::R6Class(
+  "EmailAlertRemoved",
+  inherit = Email,
+  public = list(
+    initialize = function(email, package, token) {
+      subject <- paste0("CRANalerts: ", package, " has been removed from CRAN")
+      body <- tags$div(
+        style = body_text_css,
+        tags$p(
+          "It looks like the R package", package, " has been removed from CRAN."
+        )
+      )
+
+      super$initialize(email, subject, body, include_footer = TRUE, package = package, token = token)
+    }
+  )
+)

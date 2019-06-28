@@ -64,7 +64,7 @@ function(input, output, session) {
     already_subscribed <- (nrow(res) > 0)  
     
     if (already_subscribed) {
-      email_result <- send_email_template("already_subscribed", email = email, package = package)
+      email_result <- EmailAlreadySubscribed$new(email = email, package = package)$send()
     } else {
       # check if there is already a confirmation pending for this request
       res <- make_pooled_query("SELECT token FROM Confirmations WHERE email=? AND package=?", list(email, package))
@@ -80,7 +80,7 @@ function(input, output, session) {
         make_pooled_query("INSERT INTO Confirmations (token, email, package, timestamp) VALUES (?, ?, ?, strftime('%Y%m%d%H%M%S', 'now'))", list(token, email, package))
       }
       
-      email_result <- send_email_template("confirm_subscription", email = email, package = package, token = token)
+      email_result <- EmailConfirmSubscription$new(email = email, package = package, token = token)$send()
     }
     
     if (!email_result) {
@@ -161,7 +161,7 @@ function(input, output, session) {
     confirm_msg(paste0("You're now subscribed to ", tags$strong(package), ". You'll get an email whenever the package gets updated on CRAN."))
     
     # send a confirmation email
-    send_email_template("confirmed", email = email, package = package)
+    EmailConfirmed$new(email = email, package = package)$send()
   })
   
   # ---------------------
@@ -199,11 +199,11 @@ function(input, output, session) {
     if (is.null(pkg)) {
       make_pooled_query("DELETE FROM Alerts WHERE email=?", list(email))
       unsub_msg("You have been unsubscribed from all CRANalerts emails")
-      send_email_template("unsub_all", email = email)
+      EmailUnsubAll$new(email = email)$send()
     } else {
       make_pooled_query("DELETE FROM Alerts WHERE email=? AND package=?", list(email, pkg))
       unsub_msg(paste0("You have been unsubscribed from updates to ", tags$strong(pkg)))
-      send_email_template("unsub_package", email = email, package = pkg)
+      EmailUnsubPackage$new(email = email, package = pkg)$send()
     }
   })
 }
