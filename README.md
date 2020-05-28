@@ -20,7 +20,7 @@ Technical setup details:
    - (Reboot machine to set the envvars or set the environment variables temporarily)
    - Make sure the path is set and java 8 is used: `printenv JAVA_HOME` and `java -version`
    - Run `R CMD javareconf` to set up java with R
-   - Now installing `javaR` pacakge should work, and sending emails with `mailR` should work
+   - Now installing `rJava` pacakge should work, and sending emails with `mailR` should work
 
 3. Create a `config.yml` file in the root directory that will be used to store email server settings, with the following format:
 
