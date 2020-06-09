@@ -11,6 +11,11 @@ emailInput <- function(...) {
 
 fluidPage(
   title = "CRANalerts - Get email alerts when a CRAN package gets updated",
+  shinydisconnect::disconnectMessage(
+    overlayColour = "#999", overlayOpacity = 0.7,
+    refresh = "Reload", refreshColour = "#9999FF",
+    width = 350, size = 20
+  ),
   shinyjs::useShinyjs(),
   tags$head(
     tags$link(rel="stylesheet", href="cranalerts.css"),
