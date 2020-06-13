@@ -1,6 +1,6 @@
 # CRANalerts
 
-A service by [AttaliTech Ltd](http://attalitech.com) that lets you subscribe to updates to CRAN packages. Available at [CRANalerts.com](https://cranalerts.com/).
+A service by [AttaliTech Ltd](https://attalitech.com) that lets you subscribe to updates to CRAN packages. Available at [CRANalerts.com](https://cranalerts.com/).
 
 Technical setup details:
 
