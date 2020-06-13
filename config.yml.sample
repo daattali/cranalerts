@@ -1,0 +1,7 @@
+default:
+  Smtp.Username: "username"
+  Smtp.Password: "password"
+  Smtp.Server: "server"
+  Smtp.Port: "25"
+  Smtp.From: "CRANalerts <email@email.com>"
+  Smtp.ReplyTo: "CRANalerts <email@email.com>"
