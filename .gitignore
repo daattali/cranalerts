@@ -1,4 +1,5 @@
 config.yml
+*.sqlite3.*bkup
 *.sqlite3
 restart.txt
 *.log
