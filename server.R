@@ -32,7 +32,7 @@ function(input, output, session) {
     }
   }
   shinyjs::onevent("keydown", "package_name", input_click_enter)
-  shinyjs::onevent("keydown", "package_name", input_click_enter)
+  shinyjs::onevent("keydown", "user_email", input_click_enter)
   
   # Submitting a new email-package alert request
   observeEvent(input$confirm_submit_btn, {
