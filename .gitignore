@@ -4,3 +4,4 @@ config.yml
 restart.txt
 *.log
 .Rproj.user
+.Rhistory
