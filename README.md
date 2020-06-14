@@ -14,7 +14,19 @@ A service by [AttaliTech Ltd](https://attalitech.com) that lets you subscribe to
 
 </p>
 
-### Technical setup details:
+### Technical setup details (local testing):
+
+Run the `dev_init()` function found in the `scripts/dev_init.R` file:
+
+```
+source("scripts/dev_init.R"); dev_init()
+```
+
+A SQLite database `cranalerts.sqlite3` will be created. You can now run the app.
+
+If you have an SMTP server settings and would like to send emails, create a `config.yml` file in the root directory using the template of [`config.yml.sample`](./config.yml.sample), and edit all the values to match your settings.
+
+### Technical setup details (production):
 
 1. Create a SQLite database
 

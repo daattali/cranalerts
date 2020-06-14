@@ -1,6 +1,19 @@
 library(htmltools)
 
 base_url <- "https://cranalerts.com"
+use_mock_emails <- TRUE
+CONFIG_FILE <- "config.yml"
+if (file.exists(CONFIG_FILE)) {
+  use_mock_emails <- FALSE
+  config <- config::get(file = CONFIG_FILE)
+  if (!is.null(config$baseurl)) {
+    base_url <- config$baseurl
+  }
+}
+if (use_mock_emails) {
+  message("----\nNOTE: Emails will not actually be sent, and will instead be printed to console.\n----")
+}
+
 body_text_css <- "font-size: 16px;"
 button_css <- "background: #6ebb43; color: white; text-align: center; display: inline-block; padding: 10px 50px; text-decoration: none; font-weight: bold; font-size: 20px;"
 AUTHOR_EMAIL <- "daattali@gmail.com"
@@ -77,8 +90,6 @@ email_footer <- function(email, package = NULL, unsub_token = NULL) {
   )
 }
 
-config <- config::get(file = "config.yml")
-
 Email <- R6::R6Class(
   "Email",
   public = list(
@@ -102,24 +113,35 @@ Email <- R6::R6Class(
         body <- tagList(body, email_footer(private$email, private$package, private$token))
       }
 
-      result <- try(
-        mailR::send.mail(
-          from = config$Smtp.From,
-          to = private$email,
-          replyTo = config$Smtp.ReplyTo,
-          subject = private$subject,
-          body = as.character(body),
-          html = TRUE,
-          smtp = list(host.name = config$Smtp.Server,
-                      port = config$Smtp.Port,
-                      user.name = config$Smtp.Username,
-                      passwd = config$Smtp.Password,
-                      ssl = TRUE),
-          authenticate = TRUE,
-          send = TRUE
-        ),
-        silent = TRUE
-      )
+      if (use_mock_emails) {
+        message("--- Mock email ---")
+        message("To: ", private$email)
+        message("Subject: ", private$subject)
+        message("", body)
+        message("")
+        
+        result <- TRUE
+      } else {
+        result <- try(
+          mailR::send.mail(
+            from = config$Smtp.From,
+            to = private$email,
+            replyTo = config$Smtp.ReplyTo,
+            subject = private$subject,
+            body = as.character(body),
+            html = TRUE,
+            smtp = list(host.name = config$Smtp.Server,
+                        port = config$Smtp.Port,
+                        user.name = config$Smtp.Username,
+                        passwd = config$Smtp.Password,
+                        ssl = TRUE),
+            authenticate = TRUE,
+            send = TRUE
+          ),
+          silent = TRUE
+        )
+      }
+      
       success <- (class(result) != "try-error" && !is.null(result))
       if (!success) {
         message("Failed to send '", private$subject, "' email to ", private$email)

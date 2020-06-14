@@ -3,3 +3,4 @@ config.yml
 *.sqlite3
 restart.txt
 *.log
+.Rproj.user

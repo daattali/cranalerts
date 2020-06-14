@@ -5,3 +5,4 @@ default:
   Smtp.Port: "25"
   Smtp.From: "CRANalerts <email@email.com>"
   Smtp.ReplyTo: "CRANalerts <email@email.com>"
+  baseurl: "https://cranalerts.com/"  # optional
